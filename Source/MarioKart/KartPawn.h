@@ -26,7 +26,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
-	UFONCTION(BlueprintCallable, Category = "Kart")
+	UFUNCTION(BlueprintCallable, Category = "Kart")
 	void SetCanMove(bool bInCanMove);
 	
 	UFUNCTION(BlueprintPure, Category = "Kart")
@@ -169,7 +169,6 @@ protected:
 	/*----------Réglage Visuel------------*/
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
-	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	float WheelRadius = 20.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	float MaxWheelSteerAngle = 30.f;
@@ -241,7 +240,7 @@ private:
 	void AlignToGround(float DeltaTime);
 	void UpdateVisuals(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
-	void ShowDebugInfo();
+	void ShowDebugInfo() const;
 	
 	int32 TraceGroundUnderWhells(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	

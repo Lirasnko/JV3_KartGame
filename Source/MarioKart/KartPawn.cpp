@@ -12,6 +12,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "Sound/SoundWaveProxyPlayer.h"
 //#include "KartGameMode.h"
 
 static constexpr float GroundSnapTolerance = 5.f;
@@ -212,7 +213,7 @@ void AKartPawn::UpdateGround(float DeltaTime)
 	}
 }
 
-void AKartPawn::UpdateBoost(float DeltaTime)
+void AKartPawn::UpdateSpeed(float DeltaTime)
 {
 	if (BoostTimeRemaining > 0.f)
 	{
@@ -255,7 +256,7 @@ void AKartPawn::UpdateSteering(float DeltaTime)
 	if (bIsDrifting)
 	{
 		const float SteerAlongDrift = SteerInput * DriftDirection;
-		const float DriftSteer = FMath::GetMappedRangeValueClamped(FVector2D(-1.f, 1.f), FVector2D(0.5f, 1.f), SteerAlongDrift);
+		const float DriftSteer = DriftDirection * FMath::GetMappedRangeValueClamped(FVector2D(-1.f, 1.f), FVector2D(0.5f, 1.f), SteerAlongDrift);
 		
 		const float Blend = FMath::SmoothStep(0.f, 1.f, DriftBlend);
 		Steer = FMath::Lerp(SteerInput, DriftSteer, Blend);
@@ -265,4 +266,288 @@ void AKartPawn::UpdateSteering(float DeltaTime)
 	const float MoveDirection = CurrentSpeed >= 0.f ? 1.f : -1.f;
 	const float YawDelta = Steer * Rate * MoveDirection * DeltaTime;
 	AddActorLocalRotation(FRotator(0.f, YawDelta, 0.f));
+}
+
+void AKartPawn::UpdateDrift(float DeltaTime)
+{
+	if (!bIsDrifting)
+	{
+		return;
+	}
+	
+	if (CurrentSpeed < DriftMinSpeed * 0.5f)
+	{
+		bIsDrifting = false;
+		DriftDirection = 0;
+		DriftTurnMultiplier = 0.f;
+		return;
+	}
+	
+	DriftBlend = FMath::Min(1.f, DriftBlend + DeltaTime / DriftEnterTime);
+	
+	if (bIsGrounded)
+	{
+		DriftChargeTime += DeltaTime;
+	}
+}
+
+void AKartPawn::UpdateBoost(float DeltaTime)
+{
+	BoostTimeRemaining = FMath::Max(0.f, BoostTimeRemaining - DeltaTime);
+}
+
+void AKartPawn::MoveKart(float DeltaTime)
+{
+	FVector Forward = GetActorForwardVector();
+	if (bIsGrounded)
+	{
+		Forward = FVector::VectorPlaneProject(Forward, GroundNormal).GetSafeNormal();
+	}
+	
+	const FVector Delta = Forward * CurrentSpeed * DeltaTime + FVector::UpVector * VerticalSpeed * DeltaTime;
+	
+	FHitResult Hit;
+	AddActorWorldOffset(Delta, true, &Hit);
+	
+	if (!Hit.bBlockingHit)
+	{
+		return;
+	}
+	
+	const bool bHitWall = Hit.Normal.Z < WalkableFloorZ && !Hit.bStartPenetrating;
+	if (bHitWall)
+	{
+		const FVector MoveDirection = Forward * FMath::Sign(CurrentSpeed);
+		const float ImpactStrength = FMath::Clamp(-FVector::DotProduct(MoveDirection, Hit.Normal), 0.f, 1.f);
+		
+		CurrentSpeed *= FMath::Lerp(1.f, WallSpeedFactor, ImpactStrength);
+	}
+	else if (bIsGrounded && FVector::DotProduct(Hit.Normal, GroundNormal) >= WalkableFloorZ)
+	{
+		++SphereFloorHitCount;
+		AddActorWorldOffset(Delta * (1.f - Hit.Time), false);
+		return;
+	}
+	else if (VerticalSpeed < 0.f)
+	{
+		VerticalSpeed = 0.f;
+	}
+	
+	const FVector RemainingDelta = FVector::VectorPlaneProject(Delta * (1.f - Hit.Time), Hit.Normal);
+	AddActorWorldOffset(RemainingDelta, true);
+}
+
+void AKartPawn::AlignToGround(float DeltaTime)
+{
+	const FQuat TargetRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetActorForwardVector()).ToQuat();
+	
+	const float Alpha = FMath::Clamp(GroundAlignSpeed * DeltaTime, 0.f, 1.f);
+	const FQuat NewRotation = FQuat::Slerp(GetActorQuat(), TargetRotation, Alpha);
+	
+	SetActorRotation(NewRotation);
+}
+
+void AKartPawn::UpdateVisuals(float DeltaTime)
+{
+	WheelSpinAngle += FMath::RadiansToDegrees(CurrentSpeed * DeltaTime / WheelRadius);
+	WheelSpinAngle = FMath::Fmod(WheelSpinAngle, 360.f);
+	
+	const float WheelSteerAngle = SteerInput * MaxWheelSteerAngle;
+	SetWheelRotation(WheelFrontLeft, WheelFrontLeftBaseRotation, WheelSteerAngle);
+	SetWheelRotation(WheelFrontRight, WheelFrontRightBaseRotation, WheelSteerAngle);
+	SetWheelRotation(WheelRearLeft, WheelRearLeftBaseRotation, 0.f);
+	SetWheelRotation(WheelRearRight, WheelRearRightBaseRotation, 0.f);
+	
+	const float TargetSlideYaw = bIsDrifting ? DriftDirection * DriftSlideAngle * FMath::SmoothStep(0.f, 1.f, DriftBlend) : 0.f;
+	const float CurrentSlideYaw = BodyMesh->GetRelativeRotation().Yaw - BodyBaseRotation.Yaw;
+	const float NewSlideYaw = FMath::FInterpTo(CurrentSlideYaw, TargetSlideYaw, DeltaTime, DriftSlideInterSpeed);
+	
+	FRotator BodyRotation = BodyBaseRotation;
+	BodyRotation.Yaw += NewSlideYaw;
+	BodyMesh->SetRelativeRotation(BodyRotation);
+	
+	CameraSlideYaw = FMath::FInterpTo(CameraSlideYaw, NewSlideYaw * CameraDriftFollow, DeltaTime, CameraDriftInterSpeed);
+	
+	const float KartPitch = GetActorRotation().Pitch;
+	const float TargetSlopePitch = FMath::Abs(KartPitch) > CameraSlopeDeadZone ? KartPitch - FMath::Sign(KartPitch) * CameraSlopeDeadZone : 0.f;
+	CameraSlopePitch = FMath::FInterpTo(CameraSlopePitch, TargetSlopePitch, DeltaTime, CameraSlopeFollowSpeed);
+	
+	FRotator ArmRotation = SpringArmBaseRotation;
+	ArmRotation.Yaw += CameraSlideYaw;
+	ArmRotation.Pitch += CameraSlopePitch;
+	SpringArm-> SetRelativeRotation(ArmRotation);
+}
+
+void AKartPawn::UpdateCameraFOV(float DeltaTime)
+{
+	float TargetFOV = BaseFOV;
+	
+	if (BoostTimeRemaining > 0.f)
+	{
+		TargetFOV = BoostFOV;
+	}
+	else
+	{
+		const float SpeedRatio = FMath::Clamp(CurrentSpeed / MaxForwardSpeed, 0.f, 1.f);
+		TargetFOV = FMath::Lerp(BaseFOV, MaxSpeedFOV, SpeedRatio);
+	}
+	
+	const float NewFOV = FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, FOVInterpSpeed);
+	Camera->SetFieldOfView(NewFOV);
+}
+
+int32 AKartPawn::TraceGroundUnderWhells(FVector& OutGroundPoint, FVector& OutGroundNormal) const
+{
+	const FVector Up = GetActorUpVector();
+	const FVector Forward = GetActorForwardVector() * GroundProbeHalfLength;
+	const FVector Right = GetActorRightVector() * GroundProbeHalfWidth;
+	
+	const FVector WheelOffsets[4] = { Forward - Right, Forward + Right, -Forward - Right, -Forward + Right };
+	
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	
+	FVector Points[4];
+	FVector PointSum = FVector::ZeroVector;
+	FVector NormalSum = FVector::ZeroVector;
+	int32 WheelsOnFloor = 0;
+	
+	for (int32 i = 0; i < 4; i++)
+	{
+		const FVector Start = GetActorLocation() + WheelOffsets[i] + Up * RideHeight;
+		const FVector End = Start - Up * (RideHeight * 2.f + GroundTraceDistance);
+		
+		FHitResult Hit;
+		const bool bHitFloor = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, CollisionParams) && FVector::DotProduct(Hit.ImpactNormal, Up) >= WalkableFloorZ;
+		
+		if (bHitFloor)
+		{
+			Points[i] = Hit.ImpactPoint;
+			PointSum += Hit.ImpactPoint;
+			NormalSum += Hit.ImpactNormal;
+			++WheelsOnFloor;
+		}
+	}
+		
+	if (WheelsOnFloor == 0)
+	{
+		OutGroundPoint = GetActorLocation();
+		OutGroundNormal = FVector::UpVector;
+		return 0;
+	}
+		
+	OutGroundPoint = PointSum / WheelsOnFloor;
+		
+	OutGroundNormal = NormalSum.GetSafeNormal();
+		
+	if (WheelsOnFloor == 4)
+	{
+		const FVector DiagonalA = Points[0] - Points[3];
+		const FVector DiagonalB = Points[1] - Points[2];
+		FVector PlaneNormal = FVector::CrossProduct(DiagonalA, DiagonalB).GetSafeNormal();
+		
+		if (FVector::DotProduct(PlaneNormal, Up) < 0.f)
+		{
+			PlaneNormal = -PlaneNormal;
+		}
+		
+		if (!PlaneNormal.IsNearlyZero())
+		{
+			OutGroundNormal = PlaneNormal;
+		}
+	}
+		
+	return WheelsOnFloor;
+}
+
+void AKartPawn::SetWheelRotation(UStaticMeshComponent* Wheel, const FRotator& BaseRotation, float SteerAngle) const
+{
+	const FQuat SpinAndSteer = FQuat(FRotator(0.f, SteerAngle, WheelSpinAngle));
+	Wheel->SetRelativeRotation(SpinAndSteer * FQuat(BaseRotation));
+}
+
+void AKartPawn::Jump()
+{
+	if (!bIsGrounded)
+	{
+		return;
+	}
+	
+	VerticalSpeed = JumpVelocity;
+	bIsGrounded = false;
+}
+
+void AKartPawn::StartDrift()
+{
+	if (!bIsGrounded || CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput))
+	{
+		return;
+	}
+	
+	bIsDrifting = true;
+	DriftDirection = SteerInput > 0.f ? 1 : -1;
+	DriftChargeTime = 0.f;
+	DriftBlend = 0.f;
+}
+
+void AKartPawn::EndDrift()
+{
+	if (!bIsDrifting)
+	{
+		return;
+	}
+	
+	if (DriftChargeTime >= MegaTurboChargeTime)
+	{
+		StartBoost(MegaTurboDuration);
+	}
+	else if (DriftChargeTime >= SuperTurboChargeTime)
+	{
+		StartBoost(SuperTurboDuration);
+	}
+	else if (DriftChargeTime >= MiniTurboChargeTime)
+	{
+		StartBoost(MiniTurboDuration);
+	}
+	
+	bIsDrifting = false;
+	DriftDirection = 0.f;
+	DriftChargeTime = 0.f;
+}
+
+void AKartPawn::StartBoost(float Duration)
+{
+	BoostTimeRemaining = Duration;
+	CurrentSpeed = BoostSpeed;
+}
+
+float AKartPawn::GetCurrentMaxSpeed() const
+{
+	return BoostTimeRemaining > 0.f ? BoostSpeed : MaxForwardSpeed;
+}
+
+void AKartPawn::ShowDebugInfo() const
+{
+	if (GEngine == nullptr)
+	{
+		return;
+	}
+	
+	FColor DriftColor = FColor::White;
+	if (DriftChargeTime >= MegaTurboChargeTime)
+	{
+		DriftColor = FColor::Magenta;
+	}
+	else if (DriftChargeTime >= SuperTurboChargeTime)
+	{
+		DriftColor = FColor::Orange;
+	}
+	else if (DriftChargeTime >= MiniTurboChargeTime)
+	{
+		DriftColor = FColor::Cyan;
+	}
+	
+	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White, FString::Printf(TEXT("Speed: %.0f Grounded: %s"), CurrentSpeed, bIsGrounded ? TEXT("yes") : TEXT("no")));
+	GEngine->AddOnScreenDebugMessage(2, 0.f, DriftColor, FString::Printf(TEXT("Drift: %s Grounded: %.2f"), bIsDrifting ? TEXT("yes") : TEXT("no"), DriftChargeTime));
+	GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Yellow, FString::Printf(TEXT("Boost: %.2f"), BoostTimeRemaining));
 }

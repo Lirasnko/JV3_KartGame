@@ -12,8 +12,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "KartGameMode.h"
 #include "Sound/SoundWaveProxyPlayer.h"
-//#include "KartGameMode.h"
 
 static constexpr float GroundSnapTolerance = 5.f;
 
@@ -75,16 +75,70 @@ void AKartPawn::BeginPlay()
 	WheelRearLeftBaseRotation = WheelRearLeft->GetRelativeRotation();
 	WheelRearRightBaseRotation = WheelRearRight->GetRelativeRotation();
 	
-	/*if (const AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>())
-	 * {
-	 * bCanMove = GameMode->IsRaceStarted();
-	 * }
-	 */
+	if (const AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>())
+	{
+		bCanMove = GameMode->IsRaceStarted();
+		
+		bShowDebug = GameMode->IsDebugTextEnabled();
+	}
 }
 
 void AKartPawn::SetCanMove(bool bInCanMove)
 {
 	bCanMove = bInCanMove;
+}
+
+FVector AKartPawn::GetMoveDirection() const
+{
+	return GetActorForwardVector() * FMath::Sign(CurrentSpeed);
+}
+
+void AKartPawn::EnterLapZone(int32 ZoneIndex)
+{
+	const AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>();
+	
+	if (GameMode == nullptr || !GameMode->IsRaceStarted() || bHasFinishedRace)
+	{
+		return;
+	}
+	
+	if (ZoneIndex == NextCheckpoint)
+	{
+		++NextCheckpoint;
+	}
+	else if (ZoneIndex == 0 && NextCheckpoint > GameMode->GetChackpointCount())
+	{
+		CompleteLap();
+	}
+}
+
+void AKartPawn::CompleteLap()
+{
+	AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>();
+	if (GameMode == nullptr || bHasFinishedRace)
+	{
+		return;
+	}
+	
+	NextCheckpoint = 1;
+	
+	if (CurrentLap >= GameMode->GetLapCount())
+	{
+		bHasFinishedRace = true;
+		FinishTime = GameMode->GetRaceTime();
+		GameMode->NotifyKartFinished(this);
+		return;
+	}
+	
+	++CurrentLap;
+}
+
+void AKartPawn::ResetRaceProgress()
+{
+	CurrentLap = 1;
+	NextCheckpoint = 1;
+	bHasFinishedRace = false;
+	FinishTime = 0.f;
 }
 
 void AKartPawn::NotifyControllerChanged()
@@ -190,7 +244,7 @@ void AKartPawn::UpdateGround(float DeltaTime)
 {
 	FVector GroundPoint;
 	FVector WheelsNormal;
-	const int32 WheelsOnFloor = TraceGroundUnderWhells(GroundPoint, WheelsNormal);
+	const int32 WheelsOnFloor = TraceGroundUnderWheels(GroundPoint, WheelsNormal);
 	const bool bHitFloor = WheelsOnFloor > 0;
 	
 	const float HeightAboveGround = FVector::DotProduct(GetActorLocation() - GroundPoint, GetActorUpVector());
@@ -396,7 +450,7 @@ void AKartPawn::UpdateCameraFOV(float DeltaTime)
 	Camera->SetFieldOfView(NewFOV);
 }
 
-int32 AKartPawn::TraceGroundUnderWhells(FVector& OutGroundPoint, FVector& OutGroundNormal) const
+int32 AKartPawn::TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const
 {
 	const FVector Up = GetActorUpVector();
 	const FVector Forward = GetActorForwardVector() * GroundProbeHalfLength;
@@ -479,7 +533,7 @@ void AKartPawn::Jump()
 
 void AKartPawn::StartDrift()
 {
-	if (!bIsGrounded || CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput))
+	if (CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput))
 	{
 		return;
 	}

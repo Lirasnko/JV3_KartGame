@@ -9,16 +9,35 @@
     <projectFile>Intermediate/ProjectFiles/UE5.vcxproj</projectFile>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="36aec084-45ba-4b6e-81de-2f1dbabd76fa" name="Changes" comment="" />
+    <list default="true" id="36aec084-45ba-4b6e-81de-2f1dbabd76fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.MarioKart/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MarioKart/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Automation_MarioKart.slnx" beforeDir="false" afterPath="$PROJECT_DIR$/Automation_MarioKart.slnx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/Blueprints/BP_GM_Test.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Game/Blueprints/BP_GM_Test.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/Blueprints/BP_KartPawn.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/Inputs/IMC_Default.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Game/Inputs/IMC_Default.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/Untitled.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Game/Untitled.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MarioKart.slnx" beforeDir="false" afterPath="$PROJECT_DIR$/MarioKart.slnx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/MarioKart/KartPawn.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MarioKart/KartPawn.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/MarioKart/KartPawn.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/MarioKart/KartPawn.h" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8,
-  "fromUser": false
-}]]></component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Source/MarioKart/KartGameMode.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/MarioKart/KartGameMode.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/MarioKart/LapZone.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/MarioKart/LapZone.h" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3KdhBdDScs97uOy5sOd5FyWXpfs" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -33,6 +52,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "cidr.known.project.marker": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
     "nodejs_package_manager_path": "npm",
     "rider.unittesting.toolwindow.stripe.button.shown": "true"
   }
@@ -162,7 +182,10 @@
       <method v="2" />
     </configuration>
     <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
-      <deployment type="dockerfile" />
+      <deployment type="dockerfile">
+        <settings />
+      </deployment>
+      <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
   </component>

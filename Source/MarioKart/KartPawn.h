@@ -31,7 +31,23 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Kart")
 	bool CanMove() const { return bCanMove; }
+	
+	UFUNCTION(BlueprintPure, Category = "Kart")
+	FVector GetMoveDirection() const;
 
+	/*---------Race Lap----------*/
+	void EnterLapZone(int32 ZoneIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Kart|Race")
+	void CompleteLap();
+	UFUNCTION(BlueprintCallable, Category = "Kart|Race")
+	void ResetRaceProgress();
+	UFUNCTION(BlueprintPure, Category = "Kart|Race")
+	int32 GetCurrentLap() const { return CurrentLap; }
+	UFUNCTION(BlueprintPure, Category = "Kart|Race")
+	bool HasFinishedRace() const { return bHasFinishedRace; }
+	UFUNCTION(BlueprintPure, Category = "Kart|Race")
+	float GetFinishedTime() const { return FinishTime; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,7 +71,6 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<USpringArmComponent> SpringArm;
-	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UCameraComponent> Camera;
@@ -221,6 +236,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|State")
 	bool bCanMove = true;
 	
+	/*------------Lap------------*/
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
+	int32 CurrentLap = 1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
+	int32 NextCheckpoint = 1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
+	bool bHasFinishedRace = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
+	float FinishTime = 0.f;
+	
 private:
 	
 	void OnThrottle(const FInputActionValue& Value);
@@ -242,7 +268,7 @@ private:
 	void UpdateCameraFOV(float DeltaTime);
 	void ShowDebugInfo() const;
 	
-	int32 TraceGroundUnderWhells(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
+	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	
 	void Jump();
 	

@@ -174,6 +174,8 @@ void AKartPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	EnhancedInput->BindAction(DriftAction, ETriggerEvent::Completed, this, &AKartPawn::OnDriftReleased);
 	
 	EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started, this, &AKartPawn::OnJumpPressed);
+	
+	EnhancedInput->BindAction(TrickAction, ETriggerEvent::Started, this, &AKartPawn::OnTrickPressed);
 }
 
 // Called every frame
@@ -604,4 +606,27 @@ void AKartPawn::ShowDebugInfo() const
 	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White, FString::Printf(TEXT("Speed: %.0f Grounded: %s"), CurrentSpeed, bIsGrounded ? TEXT("yes") : TEXT("no")));
 	GEngine->AddOnScreenDebugMessage(2, 0.f, DriftColor, FString::Printf(TEXT("Drift: %s Grounded: %.2f"), bIsDrifting ? TEXT("yes") : TEXT("no"), DriftChargeTime));
 	GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Yellow, FString::Printf(TEXT("Boost: %.2f"), BoostTimeRemaining));
+}
+
+void AKartPawn::OnTrickPressed(const FInputActionValue& Value)
+{
+	if (bCanMove)
+	{
+		Trick();
+	}
+}
+
+void AKartPawn::Trick()
+{
+	if (bIsGrounded)
+	{
+		return;
+	}
+	
+	if (TrickNum == 0)
+	{
+		VerticalSpeed = JumpVelocity/2.f;
+		
+	}
+	
 }

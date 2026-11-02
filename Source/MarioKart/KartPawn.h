@@ -92,6 +92,9 @@ protected:
 	//Bouton : Petit saut
 	UPROPERTY(EditAnywhere, Category = "Kart|Input")
 	TObjectPtr<UInputAction> JumpAction;
+	//Bouton : Tricks
+	UPROPERTY(EditAnywhere, Category = "Kart|Input")
+	TObjectPtr<UInputAction> TrickAction;
 	
 	/*----------Réglage Movement------------*/
 	
@@ -180,6 +183,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
 	float BoostSpeed = 3500.f;
+	/*
+	UPROPERTY(EditAnywhere, Category = "Kart|Trick")
+	float TrickBoostSpeed = 2000.f;
+	*/
+	UPROPERTY(EditAnywhere, Category = "Kart|Trick")
+	int32 TrickNum = 0;
 	
 	/*----------Réglage Visuel------------*/
 	
@@ -256,12 +265,14 @@ private:
 	void OnDriftPressed(const FInputActionValue& Value);
 	void OnDriftReleased(const FInputActionValue& Value);
 	void OnJumpPressed(const FInputActionValue& Value);
+	void OnTrickPressed(const FInputActionValue& Value);
 	
 	void UpdateGround(float DeltaTime);
 	void UpdateSpeed(float DeltaTime);
 	void UpdateSteering(float DeltaTime);
 	void UpdateDrift(float DeltaTime);
 	void UpdateBoost(float DeltaTime);
+	//void UpdateTrick(float DeltaTime);
 	void MoveKart(float DeltaTime);
 	void AlignToGround(float DeltaTime);
 	void UpdateVisuals(float DeltaTime);
@@ -271,6 +282,8 @@ private:
 	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	
 	void Jump();
+	
+	void Trick();
 	
 	void StartDrift();
 	void EndDrift();

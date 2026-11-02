@@ -3,10 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ArrowComponent.h"
-#include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "LapZone.generated.h"
+
+class UBoxComponent;
+class UArrowComponent;
+class UPrimitiveComponent;
+
+struct FHitResult;
 
 UCLASS()
 class MARIOKART_API ALapZone : public AActor
@@ -33,4 +37,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kart|Lap", meta = (ClampMin = "0"))
 	int32 ZoneIndex = 0;
+	UPROPERTY(EditAnywhere, Category = "Kart|Lap")
+	bool bShowInGame = true;
+	
+private:
+	UFUNCTION()
+	void HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

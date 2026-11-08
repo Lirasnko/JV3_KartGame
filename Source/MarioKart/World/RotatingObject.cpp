@@ -48,7 +48,7 @@ void ARotatingObject::Tick(float DeltaTime)
 	
 	if (bEnableBobbing)
 	{
-		const float BobOffset = FMath::Sin(-90 + AnimationTime * BobFrequency * 2.f * PI) * BobHeight;
+		const float BobOffset = BobHeight + FMath::Sin(-1/2*PI+AnimationTime * BobFrequency * 2.f * PI) * BobHeight;
 		AnimatedRoot->SetRelativeLocation(AnimatedRootBaseLocation + FVector(0.f, 0.f, BobOffset));
 	}
 }

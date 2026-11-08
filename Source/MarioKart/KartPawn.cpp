@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
 #include "KartGameMode.h"
+#include "Items/KartItemComponent.h"
 #include "Sound/SoundWaveProxyPlayer.h"
 
 static constexpr float GroundSnapTolerance = 5.f;
@@ -47,6 +48,8 @@ AKartPawn::AKartPawn()
 	WheelRearRight->SetupAttachment(BodyMesh);
 	WheelRearRight->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
+	ItemComponent = CreateDefaultSubobject<UKartItemComponent>(TEXT("ItemComponent"));
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(CollisionSphere);
 	SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
@@ -60,7 +63,6 @@ AKartPawn::AKartPawn()
 	
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-
 }
 
 // Called when the game starts or when spawned
@@ -86,6 +88,11 @@ void AKartPawn::BeginPlay()
 void AKartPawn::SetCanMove(bool bInCanMove)
 {
 	bCanMove = bInCanMove;
+}
+
+void AKartPawn::SetRampTrick(bool bOnRamp)
+{
+	bIsOnRamp = bOnRamp;
 }
 
 FVector AKartPawn::GetMoveDirection() const
@@ -221,7 +228,6 @@ void AKartPawn::OnSteerReleased(const FInputActionValue& Value)
 {
 	SteerInput = 0.f;
 }
-
 void AKartPawn::OnDriftPressed(const FInputActionValue& Value)
 {
 	if (bCanMove)
@@ -233,13 +239,31 @@ void AKartPawn::OnDriftReleased(const FInputActionValue& Value)
 {
 	EndDrift();
 }
-
 void AKartPawn::OnJumpPressed(const FInputActionValue& Value)
 {
 	if (bCanMove)
 	{
 		Jump();
 	}
+}
+void AKartPawn::OnUseItemPressed(const FInputActionValue& Value)
+{
+	if (bCanMove)
+	{
+		UseItem();
+	}
+}
+void AKartPawn::OnTrickPressed(const FInputActionValue& Value)
+{
+	if (bCanMove)
+	{
+		Trick();
+	}
+}
+
+void AKartPawn::UseItem()
+{
+	ItemComponent->UseItem();
 }
 
 void AKartPawn::UpdateGround(float DeltaTime)
@@ -268,7 +292,6 @@ void AKartPawn::UpdateGround(float DeltaTime)
 		VerticalSpeed -= GravityStrength * DeltaTime;
 	}
 }
-
 void AKartPawn::UpdateSpeed(float DeltaTime)
 {
 	if (BoostTimeRemaining > 0.f)
@@ -298,7 +321,6 @@ void AKartPawn::UpdateSpeed(float DeltaTime)
 	
 	CurrentSpeed = FMath::FInterpConstantTo(CurrentSpeed, TargetSpeed, DeltaTime, Rate);
 }
-
 void AKartPawn::UpdateSteering(float DeltaTime)
 {
 	if (!bIsGrounded || FMath::Abs(CurrentSpeed) < MinSpeedToTurn)
@@ -323,7 +345,6 @@ void AKartPawn::UpdateSteering(float DeltaTime)
 	const float YawDelta = Steer * Rate * MoveDirection * DeltaTime;
 	AddActorLocalRotation(FRotator(0.f, YawDelta, 0.f));
 }
-
 void AKartPawn::UpdateDrift(float DeltaTime)
 {
 	if (!bIsDrifting)
@@ -346,7 +367,6 @@ void AKartPawn::UpdateDrift(float DeltaTime)
 		DriftChargeTime += DeltaTime;
 	}
 }
-
 void AKartPawn::UpdateBoost(float DeltaTime)
 {
 	BoostTimeRemaining = FMath::Max(0.f, BoostTimeRemaining - DeltaTime);
@@ -392,7 +412,6 @@ void AKartPawn::MoveKart(float DeltaTime)
 	const FVector RemainingDelta = FVector::VectorPlaneProject(Delta * (1.f - Hit.Time), Hit.Normal);
 	AddActorWorldOffset(RemainingDelta, true);
 }
-
 void AKartPawn::AlignToGround(float DeltaTime)
 {
 	const FQuat TargetRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetActorForwardVector()).ToQuat();
@@ -433,7 +452,6 @@ void AKartPawn::UpdateVisuals(float DeltaTime)
 	ArmRotation.Pitch += CameraSlopePitch;
 	SpringArm-> SetRelativeRotation(ArmRotation);
 }
-
 void AKartPawn::UpdateCameraFOV(float DeltaTime)
 {
 	float TargetFOV = BaseFOV;
@@ -515,11 +533,19 @@ int32 AKartPawn::TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGro
 		
 	return WheelsOnFloor;
 }
-
 void AKartPawn::SetWheelRotation(UStaticMeshComponent* Wheel, const FRotator& BaseRotation, float SteerAngle) const
 {
 	const FQuat SpinAndSteer = FQuat(FRotator(0.f, SteerAngle, WheelSpinAngle));
 	Wheel->SetRelativeRotation(SpinAndSteer * FQuat(BaseRotation));
+}
+
+/*----------Items----------*/
+void AKartPawn::ApplyBoost(float Duration)
+{
+	if (Duration > 0.f)
+	{
+		StartBoost(Duration);
+	}
 }
 
 void AKartPawn::Jump()
@@ -545,7 +571,6 @@ void AKartPawn::StartDrift()
 	DriftChargeTime = 0.f;
 	DriftBlend = 0.f;
 }
-
 void AKartPawn::EndDrift()
 {
 	if (!bIsDrifting)
@@ -608,25 +633,30 @@ void AKartPawn::ShowDebugInfo() const
 	GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Yellow, FString::Printf(TEXT("Boost: %.2f"), BoostTimeRemaining));
 }
 
-void AKartPawn::OnTrickPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		Trick();
-	}
-}
-
 void AKartPawn::Trick()
 {
-	if (bIsGrounded)
+	if (bIsGrounded || !bIsOnRamp)
 	{
 		return;
 	}
 	
+	if (bIsOnRamp)
+	{
+		Jump();
+		float Steer = SteerInput;
+		if (Steer == 0)
+		{
+			
+		}
+		else
+		{
+			
+		}
+		return;
+	}
 	if (TrickNum == 0)
 	{
 		VerticalSpeed = JumpVelocity/2.f;
-		
 	}
 	
 }

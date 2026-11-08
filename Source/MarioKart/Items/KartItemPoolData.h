@@ -19,7 +19,7 @@ struct FKartItemPoolEntry
 };
 
 UCLASS(BlueprintType)
-class MARIOKITS_API UKartItemPoolData : public UPrimaryDataAsset
+class MARIOKART_API UKartItemPoolData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	

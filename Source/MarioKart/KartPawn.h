@@ -10,6 +10,7 @@ class USphereComponent;
 class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
+class UKartItemComponent;
 class UInputMappingContext;
 class UInputAction;
 
@@ -28,14 +29,16 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Kart")
 	void SetCanMove(bool bInCanMove);
-	
 	UFUNCTION(BlueprintPure, Category = "Kart")
 	bool CanMove() const { return bCanMove; }
 	
 	UFUNCTION(BlueprintPure, Category = "Kart")
 	FVector GetMoveDirection() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Kart")
+	void SetRampTrick(bool bOnRamp);
 
-	/*---------Race Lap----------*/
+	/*----------Race Lap----------*/
 	void EnterLapZone(int32 ZoneIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Kart|Race")
@@ -48,12 +51,18 @@ public:
 	bool HasFinishedRace() const { return bHasFinishedRace; }
 	UFUNCTION(BlueprintPure, Category = "Kart|Race")
 	float GetFinishedTime() const { return FinishTime; }
+	
+	/*----------Items----------*/
+	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
+	void ApplyBoost(float Duration);
+	
+	UFUNCTION(BlueprintPure, Category = "Kart|Items")
+	UKartItemComponent* GetItemComponent() const {return ItemComponent;}
 
 protected:
 	virtual void BeginPlay() override;
 	
 	virtual void NotifyControllerChanged() override;
-	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<USphereComponent> CollisionSphere;
@@ -75,8 +84,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UCameraComponent> Camera;
 	
-	/*----------Input------------*/
+	/*----------Items----------*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	TObjectPtr<UKartItemComponent> ItemComponent;
 	
+	/*----------Input----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Input")
 	TObjectPtr<UInputMappingContext> KartMappingContext;
 	
@@ -95,9 +107,11 @@ protected:
 	//Bouton : Tricks
 	UPROPERTY(EditAnywhere, Category = "Kart|Input")
 	TObjectPtr<UInputAction> TrickAction;
+	//Bouton : Items
+	UPROPERTY(EditAnywhere, Category = "Kart|Input")
+	TObjectPtr<UInputAction> UseItemAction;
 	
-	/*----------Réglage Movement------------*/
-	
+	/*----------Réglage Movement----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
 	float MaxForwardSpeed = 2500.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
@@ -116,40 +130,30 @@ protected:
 	//En dessous de cette vitesse le kart ne tourne pas
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
 	float MinSpeedToTurn = 50.f;
-	//
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement", meta = (ClampMin = "0", ClampMax = "1"))
 	float WallSpeedFactor = 0.3f;
 	
-	/*----------Réglage Gravité------------*/
-	
+	/*----------Réglage Gravité----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GravityStrength = 2500.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GroundTraceDistance = 80.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float RideHeight = 45.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GroundStickDistance = 30.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GroundAlignSpeed = 8.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GroundProbeHalfLength = 50.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GroundProbeHalfWidth = 50.f;
 	
-	/*----------Réglage Saut------------*/
-	
+	/*----------Réglage Saut----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Jump")
 	float JumpVelocity = 450.f;
 	
-	/*----------Réglage Saut------------*/
-	
+	/*----------Réglage Saut----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
 	float DriftMinSpeed = 1000.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
@@ -183,6 +187,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
 	float BoostSpeed = 3500.f;
+	
+	/*----------Tricks----------*/
 	/*
 	UPROPERTY(EditAnywhere, Category = "Kart|Trick")
 	float TrickBoostSpeed = 2000.f;
@@ -190,8 +196,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Trick")
 	int32 TrickNum = 0;
 	
-	/*----------Réglage Visuel------------*/
-	
+	/*----------Réglage Visuel----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	float WheelRadius = 20.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
@@ -215,8 +220,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	bool bShowDebug = true;
 	
-	/*----------State------------*/
-	
+	/*----------State----------*/
 	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
 	float CurrentSpeed = 0.f;
 	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
@@ -245,8 +249,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|State")
 	bool bCanMove = true;
 	
-	/*------------Lap------------*/
-	
+	/*----------Lap----------*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
 	int32 CurrentLap = 1;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
@@ -255,6 +258,12 @@ protected:
 	bool bHasFinishedRace = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
 	float FinishTime = 0.f;
+	
+	/*----------Tricks----------*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Trick")
+	bool bIsTrick = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Trick")
+	bool bIsOnRamp = false;
 	
 private:
 	
@@ -266,6 +275,7 @@ private:
 	void OnDriftReleased(const FInputActionValue& Value);
 	void OnJumpPressed(const FInputActionValue& Value);
 	void OnTrickPressed(const FInputActionValue& Value);
+	void OnUseItemPressed(const FInputActionValue& Value);
 	
 	void UpdateGround(float DeltaTime);
 	void UpdateSpeed(float DeltaTime);
@@ -282,7 +292,7 @@ private:
 	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	
 	void Jump();
-	
+	void UseItem();
 	void Trick();
 	
 	void StartDrift();

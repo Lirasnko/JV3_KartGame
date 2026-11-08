@@ -11,7 +11,7 @@ class UPrimitiveComponent;
 struct FHitResult;
 
 UCLASS()
-class MARIOKART_API UKartItemBox : public URotatingObject
+class MARIOKART_API AKartItemBox : public ARotatingObject
 {
 	GENERATED_BODY()
 	
@@ -37,7 +37,7 @@ protected:
 	UFUNCTION()
 	void HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
-	void SetBoxActive(bool BActive);
+	void SetBoxActive(bool bActive);
 	void Respawn();
 	
 	FTimerHandle RespawnTimer;

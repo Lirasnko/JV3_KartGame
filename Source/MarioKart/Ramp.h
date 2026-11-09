@@ -7,6 +7,7 @@
 #include "Ramp.generated.h"
 
 class UBoxComponent;
+class UArrowComponent;
 class UStaticMeshComponent;
 struct FHitResult;
 

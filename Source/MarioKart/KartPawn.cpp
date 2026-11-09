@@ -6,12 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/LocalPlayer.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "InputActionValue.h"
 #include "KartGameMode.h"
 #include "Items/KartItemComponent.h"
 #include "Sound/SoundWaveProxyPlayer.h"
@@ -148,43 +143,6 @@ void AKartPawn::ResetRaceProgress()
 	FinishTime = 0.f;
 }
 
-void AKartPawn::NotifyControllerChanged()
-{
-	Super::NotifyControllerChanged();
-	
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(KartMappingContext, 0);
-		}
-	}
-}
-
-void AKartPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
-	UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (EnhancedInput == nullptr)
-	{
-		return;
-	}
-	
-	EnhancedInput->BindAction(ThrottleAction, ETriggerEvent::Triggered, this, &AKartPawn::OnThrottle);
-	EnhancedInput->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &AKartPawn::OnThrottleReleased);
-	
-	EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &AKartPawn::OnSteer);
-	EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &AKartPawn::OnSteerReleased);
-	
-	EnhancedInput->BindAction(DriftAction, ETriggerEvent::Started, this, &AKartPawn::OnDriftPressed);
-	EnhancedInput->BindAction(DriftAction, ETriggerEvent::Completed, this, &AKartPawn::OnDriftReleased);
-	
-	EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started, this, &AKartPawn::OnJumpPressed);
-	
-	EnhancedInput->BindAction(TrickAction, ETriggerEvent::Started, this, &AKartPawn::OnTrickPressed);
-}
-
 // Called every frame
 void AKartPawn::Tick(float DeltaTime)
 {
@@ -210,60 +168,6 @@ void AKartPawn::Tick(float DeltaTime)
 	{
 		ShowDebugInfo();
 	}
-}
-
-void AKartPawn::OnThrottle(const FInputActionValue& Value)
-{
-	ThrottleInput = Value.Get<float>();
-}
-void AKartPawn::OnThrottleReleased(const FInputActionValue& Value)
-{
-	ThrottleInput = 0.f;
-}
-void AKartPawn::OnSteer(const FInputActionValue& Value)
-{
-	SteerInput = Value.Get<float>();
-}
-void AKartPawn::OnSteerReleased(const FInputActionValue& Value)
-{
-	SteerInput = 0.f;
-}
-void AKartPawn::OnDriftPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		StartDrift();
-	}
-}
-void AKartPawn::OnDriftReleased(const FInputActionValue& Value)
-{
-	EndDrift();
-}
-void AKartPawn::OnJumpPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		Jump();
-	}
-}
-void AKartPawn::OnUseItemPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		UseItem();
-	}
-}
-void AKartPawn::OnTrickPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		Trick();
-	}
-}
-
-void AKartPawn::UseItem()
-{
-	ItemComponent->UseItem();
 }
 
 void AKartPawn::UpdateGround(float DeltaTime)
@@ -539,6 +443,33 @@ void AKartPawn::SetWheelRotation(UStaticMeshComponent* Wheel, const FRotator& Ba
 	Wheel->SetRelativeRotation(SpinAndSteer * FQuat(BaseRotation));
 }
 
+/*----------Commands----------*/
+void AKartPawn::SetThrottleInput(float Value)
+{
+	if (!bCanMove)
+	{
+		return;
+	}
+	ThrottleInput = FMath::Clamp(Value, -1.f, 1.f);
+}
+void AKartPawn::SetSteerInput(float Value)
+{
+	if (!bCanMove)
+	{
+		return;
+	}
+	SteerInput = FMath::Clamp(Value, -1.f, 1.f);
+}
+
+void AKartPawn::UseItem()
+{
+	if (!bCanMove)
+	{
+		return;
+	}
+	ItemComponent->UseItem();
+}
+
 /*----------Items----------*/
 void AKartPawn::ApplyBoost(float Duration)
 {
@@ -550,7 +481,7 @@ void AKartPawn::ApplyBoost(float Duration)
 
 void AKartPawn::Jump()
 {
-	if (!bIsGrounded)
+	if (!bIsGrounded || !bCanMove)
 	{
 		return;
 	}
@@ -561,7 +492,7 @@ void AKartPawn::Jump()
 
 void AKartPawn::StartDrift()
 {
-	if (CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput))
+	if (CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput) || !bCanMove)
 	{
 		return;
 	}
@@ -635,7 +566,7 @@ void AKartPawn::ShowDebugInfo() const
 
 void AKartPawn::Trick()
 {
-	if (bIsGrounded || !bIsOnRamp)
+	if (bIsGrounded || !bIsOnRamp || !bCanMove)
 	{
 		return;
 	}

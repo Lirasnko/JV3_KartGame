@@ -11,10 +11,6 @@ class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UKartItemComponent;
-class UInputMappingContext;
-class UInputAction;
-
-struct FInputActionValue;
 
 UCLASS()
 class MARIOKART_API AKartPawn : public APawn
@@ -25,8 +21,7 @@ public:
 	AKartPawn();	
 	
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Kart")
 	void SetCanMove(bool bInCanMove);
 	UFUNCTION(BlueprintPure, Category = "Kart")
@@ -34,6 +29,22 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Kart")
 	FVector GetMoveDirection() const;
+	
+	/*----------Commands----------*/
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void SetThrottleInput(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void SetSteerInput(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void StartDrift();
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void EndDrift();
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void Jump();
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void UseItem();
+	UFUNCTION(BlueprintCallable, Category = "Kart|Commands")
+	void Trick();
 	
 	UFUNCTION(BlueprintCallable, Category = "Kart")
 	void SetRampTrick(bool bOnRamp);
@@ -62,8 +73,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	virtual void NotifyControllerChanged() override;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<USphereComponent> CollisionSphere;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
@@ -87,29 +96,6 @@ protected:
 	/*----------Items----------*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UKartItemComponent> ItemComponent;
-	
-	/*----------Input----------*/
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputMappingContext> KartMappingContext;
-	
-	//Axe 1D : +1 Accélérer, -1 Freiner / Reculer
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> ThrottleAction;
-	//Axe 1D : +1 Droite, -1 Gauche
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> SteerAction;
-	//Bouton : Maintenir
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> DriftAction;
-	//Bouton : Petit saut
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> JumpAction;
-	//Bouton : Tricks
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> TrickAction;
-	//Bouton : Items
-	UPROPERTY(EditAnywhere, Category = "Kart|Input")
-	TObjectPtr<UInputAction> UseItemAction;
 	
 	/*----------Réglage Movement----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
@@ -266,17 +252,6 @@ protected:
 	bool bIsOnRamp = false;
 	
 private:
-	
-	void OnThrottle(const FInputActionValue& Value);
-	void OnThrottleReleased(const FInputActionValue& Value);
-	void OnSteer(const FInputActionValue& Value);
-	void OnSteerReleased(const FInputActionValue& Value);
-	void OnDriftPressed(const FInputActionValue& Value);
-	void OnDriftReleased(const FInputActionValue& Value);
-	void OnJumpPressed(const FInputActionValue& Value);
-	void OnTrickPressed(const FInputActionValue& Value);
-	void OnUseItemPressed(const FInputActionValue& Value);
-	
 	void UpdateGround(float DeltaTime);
 	void UpdateSpeed(float DeltaTime);
 	void UpdateSteering(float DeltaTime);
@@ -291,12 +266,6 @@ private:
 	
 	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	
-	void Jump();
-	void UseItem();
-	void Trick();
-	
-	void StartDrift();
-	void EndDrift();
 	void StartBoost(float Duration);
 	float GetCurrentMaxSpeed() const;
 	

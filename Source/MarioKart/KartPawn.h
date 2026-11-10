@@ -66,6 +66,10 @@ public:
 	/*----------Items----------*/
 	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
 	void ApplyBoost(float Duration);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
+	void SpinOut(float Duration);
+	UFUNCTION(BlueprintPure, Category = "Kart|Items")
+	bool IsSpinningOut() const { return SpinOutTimeRemaining > 0.f; }
 	
 	UFUNCTION(BlueprintPure, Category = "Kart|Items")
 	UKartItemComponent* GetItemComponent() const {return ItemComponent;}
@@ -139,7 +143,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Jump")
 	float JumpVelocity = 450.f;
 	
-	/*----------Réglage Saut----------*/
+	/*----------Réglage Drift----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
 	float DriftMinSpeed = 1000.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
@@ -173,6 +177,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Drift")
 	float BoostSpeed = 3500.f;
+	
+	/*----------SpinOut----------*/
+	UPROPERTY(EditAnywhere, Category = "Kart|SpinOut", meta = (ClampMin = "0"))
+	int32 SpinOutTurns = 2;
+	UPROPERTY(EditAnywhere, Category = "Kart|SpinOut", meta = (ClampMin = "0", ClampMax = "1"))
+	float SpinOutSpeedFactor = 0.6f;
 	
 	/*----------Tricks----------*/
 	/*
@@ -234,6 +244,12 @@ protected:
 	FVector GroundNormal = FVector::UpVector;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|State")
 	bool bCanMove = true;
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutTimeRemaining = 0.f;
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutTotalTime = 0.f;
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutYaw = 0.f;
 	
 	/*----------Lap----------*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
@@ -262,6 +278,7 @@ private:
 	void AlignToGround(float DeltaTime);
 	void UpdateVisuals(float DeltaTime);
 	void UpdateCameraFOV(float DeltaTime);
+	void UpdateSpinOut(float DeltaTime);
 	void ShowDebugInfo() const;
 	
 	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
@@ -281,5 +298,4 @@ private:
 	float CameraSlideYaw = 0.f;
 	float CameraSlopePitch = 0.f;
 	int32 SphereFloorHitCount = 0;
-	
 };

@@ -8,6 +8,7 @@
 
 class UKartCountDownWidget;
 class UKartRaceHUDWidget;
+class UKartItemWidget;
 class UInputMappingContext;
 class UInputAction;
 class AKartPawn;
@@ -27,6 +28,8 @@ protected:
 	TSubclassOf<UKartCountDownWidget> CountdownWidgetClass;
 	UPROPERTY(EditAnywhere, Category="Kart|UI")
 	TSubclassOf<UKartRaceHUDWidget> RaceHUDWidgetClass;
+	UPROPERTY(EditAnywhere, Category="Kart|UI")
+	TSubclassOf<UKartItemWidget> ItemWidgetClass;
 	
 	/*----------Input----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Input")
@@ -68,4 +71,6 @@ private:
 	TObjectPtr<UKartCountDownWidget> CountdownWidget;
 	UPROPERTY()
 	TObjectPtr<UKartRaceHUDWidget> RaceHUDWidget;
+	UPROPERTY()
+	TObjectPtr<UKartItemWidget> ItemWidget;
 };

@@ -9,6 +9,7 @@
 #include "KartCountDownWidget.h"
 #include "KartPawn.h"
 #include "KartRaceHUDWidget.h"
+#include "Items/KartItemWidget.h"
 
 void AKart_PlayerController::BeginPlay()
 {
@@ -31,6 +32,14 @@ void AKart_PlayerController::BeginPlay()
 		if (CountdownWidget != nullptr)
 		{
 			CountdownWidget->AddToViewport();
+		}
+	}
+	if (ItemWidgetClass != nullptr)
+	{
+		ItemWidget = CreateWidget<UKartItemWidget>(this, ItemWidgetClass);
+		if (ItemWidget != nullptr)
+		{
+			ItemWidget->AddToViewport();
 		}
 	}
 	if (RaceHUDWidgetClass != nullptr)

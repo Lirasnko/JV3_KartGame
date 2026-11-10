@@ -154,6 +154,7 @@ void AKartPawn::Tick(float DeltaTime)
 		SteerInput = 0.f;
 	}
 	
+	UpdateSpinOut(DeltaTime);
 	UpdateGround(DeltaTime);
 	UpdateBoost(DeltaTime);
 	UpdateSpeed(DeltaTime);
@@ -342,7 +343,7 @@ void AKartPawn::UpdateVisuals(float DeltaTime)
 	const float NewSlideYaw = FMath::FInterpTo(CurrentSlideYaw, TargetSlideYaw, DeltaTime, DriftSlideInterSpeed);
 	
 	FRotator BodyRotation = BodyBaseRotation;
-	BodyRotation.Yaw += NewSlideYaw;
+	BodyRotation.Yaw += NewSlideYaw + SpinOutYaw;
 	BodyMesh->SetRelativeRotation(BodyRotation);
 	
 	CameraSlideYaw = FMath::FInterpTo(CameraSlideYaw, NewSlideYaw * CameraDriftFollow, DeltaTime, CameraDriftInterSpeed);
@@ -463,7 +464,7 @@ void AKartPawn::SetSteerInput(float Value)
 
 void AKartPawn::UseItem()
 {
-	if (!bCanMove)
+	if (!bCanMove || IsSpinningOut())
 	{
 		return;
 	}
@@ -481,7 +482,7 @@ void AKartPawn::ApplyBoost(float Duration)
 
 void AKartPawn::Jump()
 {
-	if (!bIsGrounded || !bCanMove)
+	if (!bIsGrounded || !bCanMove || IsSpinningOut())
 	{
 		return;
 	}
@@ -492,7 +493,7 @@ void AKartPawn::Jump()
 
 void AKartPawn::StartDrift()
 {
-	if (CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput) || !bCanMove)
+	if (CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput) || !bCanMove || IsSpinningOut())
 	{
 		return;
 	}
@@ -562,6 +563,41 @@ void AKartPawn::ShowDebugInfo() const
 	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White, FString::Printf(TEXT("Speed: %.0f Grounded: %s"), CurrentSpeed, bIsGrounded ? TEXT("yes") : TEXT("no")));
 	GEngine->AddOnScreenDebugMessage(2, 0.f, DriftColor, FString::Printf(TEXT("Drift: %s Grounded: %.2f"), bIsDrifting ? TEXT("yes") : TEXT("no"), DriftChargeTime));
 	GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Yellow, FString::Printf(TEXT("Boost: %.2f"), BoostTimeRemaining));
+}
+
+void AKartPawn::SpinOut(float Duration)
+{
+	if (Duration <= 0.f || IsSpinningOut())
+	{
+		return;
+	}
+	
+	SpinOutTotalTime = Duration;
+	SpinOutTimeRemaining = Duration;
+	
+	CurrentSpeed *= SpinOutSpeedFactor;
+	BoostTimeRemaining = 0.f;
+	bIsDrifting = false;
+	DriftDirection = 0;
+	DriftChargeTime = 0.f;
+}
+
+void AKartPawn::UpdateSpinOut(float DeltaTime)
+{
+	if (!IsSpinningOut())
+	{
+		SpinOutYaw = 0.f;
+		return;
+	}
+	
+	SpinOutTimeRemaining = FMath::Max(0.f, SpinOutTimeRemaining - DeltaTime);
+	
+	ThrottleInput = 0.f;
+	SteerInput = 0.f;
+	
+	const float Progress = 1.f - SpinOutTimeRemaining / SpinOutTotalTime;
+	const float EaseOut = 1.f - FMath::Square(1.f - Progress);
+	SpinOutYaw = 360.f * SpinOutTurns * EaseOut;
 }
 
 void AKartPawn::Trick()

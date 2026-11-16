@@ -46,5 +46,5 @@ void ARamp::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 bool ARamp::IsGoingRightWay(const FVector& MoveDirection) const
 {
-	
+	return false;
 }

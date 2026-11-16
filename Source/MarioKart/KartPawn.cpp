@@ -339,14 +339,13 @@ void AKartPawn::UpdateVisuals(float DeltaTime)
 	SetWheelRotation(WheelRearRight, WheelRearRightBaseRotation, 0.f);
 	
 	const float TargetSlideYaw = bIsDrifting ? DriftDirection * DriftSlideAngle * FMath::SmoothStep(0.f, 1.f, DriftBlend) : 0.f;
-	const float CurrentSlideYaw = BodyMesh->GetRelativeRotation().Yaw - BodyBaseRotation.Yaw;
-	const float NewSlideYaw = FMath::FInterpTo(CurrentSlideYaw, TargetSlideYaw, DeltaTime, DriftSlideInterSpeed);
+	BodySlideYaw = FMath::FInterpTo(BodySlideYaw, TargetSlideYaw, DeltaTime, DriftSlideInterSpeed);
 	
 	FRotator BodyRotation = BodyBaseRotation;
-	BodyRotation.Yaw += NewSlideYaw + SpinOutYaw;
+	BodyRotation.Yaw += BodySlideYaw + SpinOutYaw;
 	BodyMesh->SetRelativeRotation(BodyRotation);
 	
-	CameraSlideYaw = FMath::FInterpTo(CameraSlideYaw, NewSlideYaw * CameraDriftFollow, DeltaTime, CameraDriftInterSpeed);
+	CameraSlideYaw = FMath::FInterpTo(CameraSlideYaw, BodySlideYaw * CameraDriftFollow, DeltaTime, CameraDriftInterSpeed);
 	
 	const float KartPitch = GetActorRotation().Pitch;
 	const float TargetSlopePitch = FMath::Abs(KartPitch) > CameraSlopeDeadZone ? KartPitch - FMath::Sign(KartPitch) * CameraSlopeDeadZone : 0.f;
@@ -590,7 +589,7 @@ void AKartPawn::UpdateSpinOut(float DeltaTime)
 		return;
 	}
 	
-	SpinOutTimeRemaining = FMath::Max(0.f, SpinOutTimeRemaining - DeltaTime);
+	SpinOutTimeRemaining = FMath::Max(0.f, SpinOutTimeRemaining	 - DeltaTime);
 	
 	ThrottleInput = 0.f;
 	SteerInput = 0.f;

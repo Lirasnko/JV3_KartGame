@@ -101,7 +101,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UKartItemComponent> ItemComponent;
 	
-	/*----------Réglage Movement----------*/
+	/*----------Movement Parameter----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
 	float MaxForwardSpeed = 2500.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement")
@@ -123,7 +123,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Movement", meta = (ClampMin = "0", ClampMax = "1"))
 	float WallSpeedFactor = 0.3f;
 	
-	/*----------Réglage Gravité----------*/
+	/*----------Gravity Parameter----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
 	float GravityStrength = 2500.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Gravity")
@@ -192,7 +192,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Trick")
 	int32 TrickNum = 0;
 	
-	/*----------Réglage Visuel----------*/
+	/*----------Visual Parameter----------*/
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	float WheelRadius = 20.f;
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
@@ -257,7 +257,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
 	int32 NextCheckpoint = 1;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
-	bool bHasFinishedRace = true;
+	bool bHasFinishedRace = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
 	float FinishTime = 0.f;
 	
@@ -295,6 +295,7 @@ private:
 	FRotator WheelRearLeftBaseRotation;
 	FRotator WheelRearRightBaseRotation;
 	
+	float BodySlideYaw = 0.f;
 	float CameraSlideYaw = 0.f;
 	float CameraSlopePitch = 0.f;
 	int32 SphereFloorHitCount = 0;

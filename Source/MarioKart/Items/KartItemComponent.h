@@ -28,6 +28,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Kart|Items")
 	bool HasItem() const {return CurrentItem != nullptr;}
 	UFUNCTION(BlueprintPure, Category = "Kart|Items")
+	bool IsRouletteRunning() const {return bRouletteRunning;}
+	UFUNCTION(BlueprintPure, Category = "Kart|Items")
+	UKartItemData* GetCurrentItem() const {return CurrentItem;}
+	UFUNCTION(BlueprintPure, Category = "Kart|Items")
 	int32 GetUsesLeft() const {return UsesLeft;}
 	
 	UPROPERTY(BlueprintAssignable, Category = "Kart|Items")

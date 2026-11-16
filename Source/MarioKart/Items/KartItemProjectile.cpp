@@ -52,7 +52,7 @@ void AKartItemProjectile::Tick( float DeltaTime )
 	
 	if (BouncesLeft <= 0)
 	{
-		Destroy();
+		//Destroy();
 		return;
 	}
 	

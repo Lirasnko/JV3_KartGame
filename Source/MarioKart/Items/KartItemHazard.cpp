@@ -42,7 +42,7 @@ void AKartItemHazard::BeginPlay()
 bool AKartItemHazard::FindGround(float MaxDistance, FHitResult& OutHit) const
 {
 	const FVector Start = GetActorLocation() + FVector::UpVector * 50.f;
-	const FVector End = GetActorLocation() + FVector::UpVector * MaxDistance;
+	const FVector End = GetActorLocation() - FVector::UpVector * MaxDistance;
 	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -59,7 +59,7 @@ void AKartItemHazard::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		return;
 	}
 	
-	if (Kart == GetOuter() && GetGameTimeSinceCreation() < OwnerSafeTime)
+	if (Kart == GetOwner() && GetGameTimeSinceCreation() < OwnerSafeTime)
 	{
 		return;
 	}

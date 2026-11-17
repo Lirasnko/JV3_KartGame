@@ -8,7 +8,7 @@ public class MarioKart : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "DeveloperSettings", "GameplayTags", "Slate",  "SlateCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

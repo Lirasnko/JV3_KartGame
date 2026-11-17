@@ -35,7 +35,7 @@ void AKartItemProjectile::Tick( float DeltaTime )
 		VerticalSpeed -= GravityStrength * DeltaTime;
 	}
 	
-	const FVector Delta = Direction * Speed / DeltaTime + FVector::UpVector * VerticalSpeed * DeltaTime;
+	const FVector Delta = Direction * Speed * DeltaTime + FVector::UpVector * VerticalSpeed * DeltaTime;
 	FHitResult Hit;
 	AddActorWorldOffset(Delta, true, &Hit);
 	
@@ -52,7 +52,7 @@ void AKartItemProjectile::Tick( float DeltaTime )
 	
 	if (BouncesLeft <= 0)
 	{
-		//Destroy();
+		Destroy();
 		return;
 	}
 	

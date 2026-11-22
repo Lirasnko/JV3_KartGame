@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Menu/KartOptionRow.h"
+#include "Menu/Option/KartOptionRow.h"
 #include "KartOptionSelector.generated.h"
 
 class UButton;

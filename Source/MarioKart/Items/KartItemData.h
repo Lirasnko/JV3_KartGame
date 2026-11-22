@@ -6,6 +6,7 @@
 
 class AKartPawn;
 class UTexture2D;
+
 UCLASS(Abstract, BlueprintType)
 class MARIOKART_API UKartItemData : public UPrimaryDataAsset
 {

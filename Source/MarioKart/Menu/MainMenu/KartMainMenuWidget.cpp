@@ -1,4 +1,4 @@
-#include "Menu/KartMainMenuWidget.h"
+#include "Menu/MainMenu/KartMainMenuWidget.h"
 
 #include "Components/Button.h"
 #include "GameFramework/PlayerController.h"
@@ -25,7 +25,7 @@ void UKartMainMenuWidget::HandlePlayClicked()
 		PC->SetInputMode(FInputModeGameOnly());
 	}
 	
-	UGameplayStatics::OpenLevelBySoftObjectPtr(this, RaceLevel);
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, KartChoiceLevel);
 }
 
 void UKartMainMenuWidget::HandleQuitClicked()

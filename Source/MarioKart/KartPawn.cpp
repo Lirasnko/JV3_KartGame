@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "Engine/Engine.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "KartGameMode.h"
@@ -42,6 +43,37 @@ AKartPawn::AKartPawn()
 	WheelRearRight = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WheelRearRight"));
 	WheelRearRight->SetupAttachment(BodyMesh);
 	WheelRearRight->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	SpoilerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SpoilerMesh"));
+	SpoilerMesh->SetupAttachment(BodyMesh);
+	SpoilerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	LightMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LightMesh"));
+	LightMesh->SetupAttachment(BodyMesh);
+	LightMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	SpotLightLeft = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLightLeft"));
+	SpotLightLeft->SetupAttachment(BodyMesh);
+	SpotLightLeft->SetRelativeLocation(KartSpotLightPosition);
+	SpotLightLeft->SetRelativeRotation(FRotator(-16, 90, 0));
+	SpotLightLeft->SetAttenuationRadius(3000.f);
+	SpotLightLeft->SetOuterConeAngle(40.f);
+	SpotLightRight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLightRight"));
+	SpotLightRight->SetupAttachment(BodyMesh);
+	SpotLightRight->SetRelativeLocation(FVector(-KartSpotLightPosition.X, KartSpotLightPosition.Y, KartSpotLightPosition.Z));
+	SpotLightRight->SetRelativeRotation(FRotator(-16, 90, 0));
+	SpotLightRight->SetAttenuationRadius(3000.f);
+	SpotLightRight->SetOuterConeAngle(40.f);
+	if (bIsSpotLightActive)
+	{
+		SpotLightLeft->SetIntensity(1024.f);
+		SpotLightRight->SetIntensity(1024.f);
+	}
+	else
+	{
+		SpotLightLeft->SetIntensity(0.f);
+		SpotLightRight->SetIntensity(0.f);
+	}
 	
 	ItemComponent = CreateDefaultSubobject<UKartItemComponent>(TEXT("ItemComponent"));
 	
@@ -372,6 +404,71 @@ void AKartPawn::UpdateCameraFOV(float DeltaTime)
 	
 	const float NewFOV = FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, FOVInterpSpeed);
 	Camera->SetFieldOfView(NewFOV);
+}
+void AKartPawn::SetKartBody(UStaticMesh* BodySMesh, UStaticMesh* LightSMesh, FVector LightPosition, FRotator LightRotation, FVector SpotLightPosition)
+{
+	BodyMesh->SetStaticMesh(BodySMesh);
+	KartSpotLightPosition = SpotLightPosition;
+}
+void AKartPawn::SetKartPartPosition(FVector WheelFrontPosition, FVector WheelRearPosition, FVector SpoilerPosition)
+{
+	WheelFrontLeft->SetRelativeLocation(FVector(-WheelFrontPosition.X, WheelFrontPosition.Y, WheelFrontPosition.Z));
+	WheelFrontRight->SetRelativeLocation(WheelFrontPosition);
+	WheelRearLeft->SetRelativeLocation(FVector(-WheelRearPosition.X, WheelRearPosition.Y, WheelRearPosition.Z));
+	WheelRearRight->SetRelativeLocation(WheelRearPosition);
+	SpoilerMesh->SetRelativeLocation(SpoilerPosition);
+}
+void AKartPawn::SetKartWheels(UStaticMesh* WheelLeftSMesh, UStaticMesh* WheelRightMesh)
+{
+	WheelFrontLeft->SetStaticMesh(WheelLeftSMesh);
+	WheelFrontRight->SetStaticMesh(WheelRightMesh);
+	WheelRearLeft->SetStaticMesh(WheelLeftSMesh);
+	WheelRearRight->SetStaticMesh(WheelRightMesh);
+}
+void AKartPawn::SetKartSpoiler(UStaticMesh* SpoilerSMesh)
+{
+	SpoilerMesh->SetStaticMesh(SpoilerSMesh);
+}
+
+void AKartPawn::SetBodyHeight(float BodyHeight)
+{
+	BodyMesh->SetRelativeLocation(FVector(0, 0,BodyHeight));
+}
+void AKartPawn::SetBodyStat(EKartData_ID IDBody, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction)
+{
+	BodyID = IDBody;
+	BodySpeedStat = StatSpeed;
+	BodyAccelerationStat = StatAcceleration;
+	BodyWeightStat = StatWeight;
+	BodyHandlingStat = StatHandling;
+	BodyTractionStat = StatTraction;
+}
+void AKartPawn::SetWheelsStat(EKartData_ID IDWheels, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction)
+{
+	WheelsID = IDWheels;
+	WheelsSpeedStat = StatSpeed;
+	WheelsAccelerationStat = StatAcceleration;
+	WheelsWeightStat = StatWeight;
+	WheelsHandlingStat = StatHandling;
+	WheelsTractionStat = StatTraction;
+}
+void AKartPawn::SetSpoilerStat(EKartData_ID IDSpoiler, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction)
+{
+	SpoilerID = IDSpoiler;
+	SpoilerSpeedStat = StatSpeed;
+	SpoilerAccelerationStat = StatAcceleration;
+	SpoilerWeightStat = StatWeight;
+	SpoilerHandlingStat = StatHandling;
+	SpoilerTractionStat = StatTraction;
+}
+
+void AKartPawn::SetStat()
+{
+	SpeedStat = (BodySpeedStat * 3 + WheelsSpeedStat * 2 + SpoilerSpeedStat) / 5;
+	AccelerationStat = (BodyAccelerationStat * 3 + WheelsAccelerationStat * 2 + SpoilerAccelerationStat) / 5;
+	WeightStat = (BodyWeightStat * 3 + WheelsWeightStat * 2 + SpoilerWeightStat) / 5;
+	HandlingStat = (BodyHandlingStat * 3 + WheelsHandlingStat * 2 + SpoilerHandlingStat) / 5;
+	TractionStat = (BodyTractionStat * 3 + WheelsTractionStat * 2 + SpoilerTractionStat) / 5;
 }
 
 int32 AKartPawn::TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const

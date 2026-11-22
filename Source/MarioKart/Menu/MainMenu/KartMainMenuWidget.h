@@ -22,7 +22,7 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitButton;
 	UPROPERTY(EditAnywhere, Category = "Kart|Menu")
-	TSoftObjectPtr<UWorld> RaceLevel;
+	TSoftObjectPtr<UWorld> KartChoiceLevel;
 	
 private:
 	UFUNCTION()

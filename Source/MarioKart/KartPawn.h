@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Kart/KartData.h"
 #include "KartPawn.generated.h"
 
 class USphereComponent;
@@ -11,6 +12,7 @@ class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UKartItemComponent;
+class USpotLightComponent;
 
 UCLASS()
 class MARIOKART_API AKartPawn : public APawn
@@ -73,7 +75,25 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Kart|Items")
 	UKartItemComponent* GetItemComponent() const {return ItemComponent;}
-
+	
+	UFUNCTION(BlueprintCallable, Category = "Kart|Visual")
+	void SetKartBody(UStaticMesh* BodySMesh, UStaticMesh* LightSMesh, FVector LightPosition, FRotator LightRotation, FVector SpotLightPosition);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Visual")
+	void SetKartPartPosition(FVector WheelFrontPosition, FVector WheelRearPosition, FVector SpoilerPosition);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Visual")
+	void SetKartWheels(UStaticMesh* WheelLeftSMesh, UStaticMesh* WheelRightMesh);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Visual")
+	void SetKartSpoiler(UStaticMesh* SpoilerSMesh);
+	
+	UFUNCTION(BlueprintCallable, Category = "Kart|Stat")
+	void SetBodyHeight(float BodyHeight);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Stat")
+	void SetBodyStat(EKartData_ID IDBody, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Stat")
+	void SetWheelsStat(EKartData_ID IDWheels, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Stat")
+	void SetSpoilerStat(EKartData_ID IDSpoiler, float StatSpeed, float StatAcceleration, float StatWeight, float StatHandling, float StatTraction);
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -90,6 +110,20 @@ protected:
 	TObjectPtr<UStaticMeshComponent> WheelRearLeft;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UStaticMeshComponent> WheelRearRight;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	TObjectPtr<UStaticMeshComponent> SpoilerMesh;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	TObjectPtr<UStaticMeshComponent> LightMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	TObjectPtr<USpotLightComponent> SpotLightRight;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	TObjectPtr<USpotLightComponent> SpotLightLeft;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	FVector KartSpotLightPosition;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
+	bool bIsSpotLightActive;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<USpringArmComponent> SpringArm;
@@ -280,6 +314,33 @@ private:
 	void UpdateCameraFOV(float DeltaTime);
 	void UpdateSpinOut(float DeltaTime);
 	void ShowDebugInfo() const;
+	
+	/*----------Statistics----------*/
+	void SetStat();
+	float SpeedStat = 0.f;
+	float AccelerationStat = 0.f;
+	float WeightStat = 0.f;
+	float HandlingStat = 0.f;
+	float TractionStat = 0.f;
+	float BodySpeedStat = 0.f;
+	float BodyAccelerationStat = 0.f;
+	float BodyWeightStat = 0.f;
+	float BodyHandlingStat = 0.f;
+	float BodyTractionStat = 0.f;
+	float WheelsSpeedStat = 0.f;
+	float WheelsAccelerationStat = 0.f;
+	float WheelsWeightStat = 0.f;
+	float WheelsHandlingStat = 0.f;
+	float WheelsTractionStat = 0.f;
+	float SpoilerSpeedStat = 0.f;
+	float SpoilerAccelerationStat = 0.f;
+	float SpoilerWeightStat = 0.f;
+	float SpoilerHandlingStat = 0.f;
+	float SpoilerTractionStat = 0.f;
+	
+	EKartData_ID BodyID;
+	EKartData_ID WheelsID;
+	EKartData_ID SpoilerID;
 	
 	int32 TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGroundNormal) const;
 	

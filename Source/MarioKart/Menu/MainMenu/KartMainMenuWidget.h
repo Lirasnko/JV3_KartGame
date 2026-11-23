@@ -5,6 +5,7 @@
 #include "KartMainMenuWidget.generated.h"
 
 class UButton;
+class UKartOptionWidget;
 
 UCLASS()
 class MARIOKART_API UKartMainMenuWidget : public UUserWidget
@@ -20,13 +21,24 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> PlayButton;
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> OptionButton;
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitButton;
 	UPROPERTY(EditAnywhere, Category = "Kart|Menu")
 	TSoftObjectPtr<UWorld> KartChoiceLevel;
+	UPROPERTY(EditAnywhere, Category = "Kart|Menu")
+	TSubclassOf<UKartOptionWidget> OptionWidgetClass;
 	
 private:
 	UFUNCTION()
 	void HandlePlayClicked();
 	UFUNCTION()
+	void HandleOptionClicked();
+	UFUNCTION()
 	void HandleQuitClicked();
+	
+	UFUNCTION()
+	void HandleOptionClosed();
+	UPROPERTY()
+	TObjectPtr<UKartOptionWidget> OptionWidget;
 };

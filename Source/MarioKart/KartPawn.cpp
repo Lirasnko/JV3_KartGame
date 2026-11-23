@@ -627,7 +627,14 @@ void AKartPawn::EndDrift()
 void AKartPawn::StartBoost(float Duration)
 {
 	BoostTimeRemaining = Duration;
-	CurrentSpeed = BoostSpeed;
+	if (BodyID == EKartData_ID::AE86InitialD && WheelsID == EKartData_ID::AE86InitialD && SpoilerID == EKartData_ID::AE86InitialD)
+	{
+		CurrentSpeed = BoostSpeed * 2;
+	}
+	else
+	{
+		CurrentSpeed = BoostSpeed;
+	}
 }
 
 float AKartPawn::GetCurrentMaxSpeed() const

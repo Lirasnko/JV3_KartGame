@@ -18,6 +18,7 @@ public:
 	void FocusDefaultButton();
 	
 protected:
+	virtual void NativePreConstruct() override;
 	virtual void NativeOnInitialized() override;
 	
 	UPROPERTY(meta = (BindWidget))

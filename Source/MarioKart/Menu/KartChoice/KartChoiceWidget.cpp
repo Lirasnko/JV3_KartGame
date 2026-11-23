@@ -8,12 +8,9 @@
 #include "Kart/KartPartListData.h"
 #include "Kismet/GameplayStatics.h"
 
-void UKartChoiceWidget::NativeOnInitialized()
+void UKartChoiceWidget::NativePreConstruct()
 {
-	Super::NativeOnInitialized();
-	
-	PlayButton->OnClicked.AddDynamic(this, &UKartChoiceWidget::HandlePlayClicked);
-	BackButton->OnClicked.AddDynamic(this, &UKartChoiceWidget::HandleBackClicked);
+	Super::NativePreConstruct();
 	
 	if (BodyList != nullptr)
 	{
@@ -51,6 +48,13 @@ void UKartChoiceWidget::NativeOnInitialized()
 			VerticalBox_Spoiler->AddChildToVerticalBox(Button);
 		}
 	}
+}
+void UKartChoiceWidget::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	
+	PlayButton->OnClicked.AddDynamic(this, &UKartChoiceWidget::HandlePlayClicked);
+	BackButton->OnClicked.AddDynamic(this, &UKartChoiceWidget::HandleBackClicked);
 }
 
 void UKartChoiceWidget::FocusDefaultButton()

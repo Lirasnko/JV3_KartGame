@@ -8,6 +8,7 @@ class UButton;
 class UTextBlock;
 class UWidgetSwitcher;
 class UKartOptionSelector;
+class UKartOptionSlider;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOptionsClosed);
 
@@ -32,6 +33,12 @@ protected:
 	TObjectPtr<UWidgetSwitcher> TabSwitcher;
 	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UButton> GraphicsTabButton;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UButton> AudioTabButton;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UButton> GameTabButton;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UButton> CommandTabButton;
 	
 	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UKartOptionSelector> ResolutionSelector;
@@ -45,6 +52,18 @@ protected:
 	TObjectPtr<UKartOptionSelector> FrameRateSelector;
 	
 	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UKartOptionSlider> MasterVolumeSlider;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UKartOptionSlider> MusicVolumeSlider;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UKartOptionSlider> SfxVolumeSlider;
+	
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UKartOptionSlider> FOVSlider;
+	UPROPERTY(meta =(BindWidget))
+	TObjectPtr<UKartOptionSlider> LapCountSlider;
+	
+	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UButton> ApplyButton ;
 	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UButton> DefaultButton ;
@@ -54,7 +73,7 @@ protected:
 	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UWidget> ConfirmPanel;
 	UPROPERTY(meta =(BindWidget))
-	TObjectPtr<UTextBlock> ConfirmText;
+		TObjectPtr<UTextBlock> ConfirmText;
 	UPROPERTY(meta =(BindWidget))
 	TObjectPtr<UButton> KeepButton;
 	UPROPERTY(meta =(BindWidget))
@@ -66,6 +85,12 @@ protected:
 private:
 	UFUNCTION()
 	void HandleGraphicsTabClicked();
+	UFUNCTION()
+	void HandleAudioTabClicked();
+	UFUNCTION()
+	void HandleGameTabClicked();
+	UFUNCTION()
+	void HandleCommandTabClicked();
 	void ShowTab(int32 TabIndex);
 	
 	void SetupGraphicsChoices();
@@ -81,6 +106,18 @@ private:
 	void HandleVSyncChanged(int32 NewIndex);
 	UFUNCTION()
 	void HandleFrameRateChanged(int32 NewIndex);
+	
+	UFUNCTION()
+	void HandleMasterVolumeChanged(float NewValue);
+	UFUNCTION()
+	void HandleMusicVolumeChanged(float NewValue);
+	UFUNCTION()
+	void HandleSfxVolumeChanged(float NewValue);
+	
+	UFUNCTION()
+	void HandleFOVChanged(float NewValue);
+	UFUNCTION()
+	void HandleLapCountChanged(float NewValue);
 	
 	UFUNCTION()
 	void HandleApplyClicked();

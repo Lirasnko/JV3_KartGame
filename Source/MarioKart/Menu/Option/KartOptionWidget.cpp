@@ -6,6 +6,7 @@
 #include "InputCoreTypes.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Menu/Option/KartOptionSelector.h"
+#include "Menu/Option/KartOptionSlider.h"
 #include "Settings/KartGameUserSettings.h"
 
 void UKartOptionWidget::NativeOnInitialized()
@@ -13,6 +14,9 @@ void UKartOptionWidget::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	
 	GraphicsTabButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleGraphicsTabClicked);
+	AudioTabButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleAudioTabClicked);
+	GameTabButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleGameTabClicked);
+	CommandTabButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleCommandTabClicked);
 	
 	SetupGraphicsChoices();
 	ResolutionSelector->OnSelectionChanged.AddDynamic(this, &UKartOptionWidget::HandleResolutionChanged);
@@ -20,6 +24,18 @@ void UKartOptionWidget::NativeOnInitialized()
 	QualitySelector->OnSelectionChanged.AddDynamic(this, &UKartOptionWidget::HandleQualityChanged);
 	VSyncSelector->OnSelectionChanged.AddDynamic(this, &UKartOptionWidget::HandleVSyncChanged);
 	FrameRateSelector->OnSelectionChanged.AddDynamic(this, &UKartOptionWidget::HandleFrameRateChanged);
+	
+	MasterVolumeSlider->SetRange(0.f, 1.f, 0.05f);
+	MusicVolumeSlider->SetRange(0.f, 1.f, 0.05f);
+	SfxVolumeSlider->SetRange(0.f, 1.f, 0.05f);
+	MasterVolumeSlider->OnValueChanged.AddDynamic(this, &UKartOptionWidget::HandleMasterVolumeChanged);
+	MusicVolumeSlider->OnValueChanged.AddDynamic(this, &UKartOptionWidget::HandleMusicVolumeChanged);
+	SfxVolumeSlider->OnValueChanged.AddDynamic(this, &UKartOptionWidget::HandleSfxVolumeChanged);
+	
+	FOVSlider->SetRange(UKartGameUserSettings::MinFOV, UKartGameUserSettings::MaxFOV, 1.f);
+	LapCountSlider->SetRange(UKartGameUserSettings::MinLapCount, UKartGameUserSettings::MaxLapCount, 1.f);
+	FOVSlider->OnValueChanged.AddDynamic(this, &UKartOptionWidget::HandleFOVChanged);
+	LapCountSlider->OnValueChanged.AddDynamic(this, &UKartOptionWidget::HandleLapCountChanged);
 	
 	ApplyButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleApplyClicked);
 	DefaultButton->OnClicked.AddDynamic(this, &UKartOptionWidget::HandleDefaultClicked);
@@ -40,6 +56,18 @@ void UKartOptionWidget::FocusDefaultButton()
 void UKartOptionWidget::HandleGraphicsTabClicked()
 {
 	ShowTab(0);
+}
+void UKartOptionWidget::HandleAudioTabClicked()
+{
+	ShowTab(1);
+}
+void UKartOptionWidget::HandleGameTabClicked()
+{
+	ShowTab(2);
+}
+void UKartOptionWidget::HandleCommandTabClicked()
+{
+	ShowTab(3);
 }
 
 void UKartOptionWidget::ShowTab(int32 TabIndex)
@@ -117,6 +145,13 @@ void UKartOptionWidget::LoadFromSettings()
 	QualitySelector->SetSelectedIndex(Quality >= 0 ? Quality : 3);
 	VSyncSelector->SetSelectedIndex(Settings->IsVSyncEnabled() ? 1 : 0);
 	FrameRateSelector->SetSelectedIndex(FrameRateLimits.Find(Settings->GetFrameRateLimit()));
+	
+	MasterVolumeSlider->SetValue(Settings->GetMasterVolume());
+	MusicVolumeSlider->SetValue(Settings->GetMusicVolume());
+	SfxVolumeSlider->SetValue(Settings->GetSfxVolume());
+	
+	FOVSlider->SetValue(Settings->GetCameraFOV());
+	LapCountSlider->SetValue(Settings->GetLapCount());
 }
 
 void UKartOptionWidget::HandleResolutionChanged(int32 NewIndex)
@@ -165,6 +200,56 @@ void UKartOptionWidget::HandleFrameRateChanged(int32 NewIndex)
 	Settings->SetFrameRateLimit(FrameRateLimits[NewIndex]);
 }
 
+void UKartOptionWidget::HandleMasterVolumeChanged(float NewValue)
+{
+	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	Settings->SetMasterVolume(NewValue);
+	Settings->ApplyAudioSettings(this);
+}
+void UKartOptionWidget::HandleMusicVolumeChanged(float NewValue)
+{
+	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	Settings->SetMusicVolume(NewValue);
+	Settings->ApplyAudioSettings(this);
+}
+void UKartOptionWidget::HandleSfxVolumeChanged(float NewValue)
+{
+	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	Settings->SetSfxVolume(NewValue);
+	Settings->ApplyAudioSettings(this);
+}
+
+void UKartOptionWidget::HandleFOVChanged(float NewValue)
+{
+	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	Settings->SetCameraFOV(NewValue);
+}
+void UKartOptionWidget::HandleLapCountChanged(float NewValue)
+{
+	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	Settings->SetLapCount(FMath::RoundToInt(NewValue));
+}
+
 void UKartOptionWidget::HandleApplyClicked()
 {
 	UKartGameUserSettings* Settings = UKartGameUserSettings::Get();
@@ -189,6 +274,7 @@ void UKartOptionWidget::HandleDefaultClicked()
 	}
 	
 	Settings->SetToDefaults();
+	Settings->ApplyAudioSettings(this);
 	LoadFromSettings();
 }
 void UKartOptionWidget::HandleBackClicked()
@@ -199,6 +285,7 @@ void UKartOptionWidget::HandleBackClicked()
 		return;
 	}
 	Settings->LoadSettings(true);
+	Settings->ApplyAudioSettings(this);
 	RemoveFromParent();
 	OnClosed.Broadcast();
 }

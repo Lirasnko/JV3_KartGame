@@ -10,6 +10,7 @@
 #include "KartPawn.h"
 #include "Menu/InGame/KartRaceHUDWidget.h"
 #include "Items/KartItemWidget.h"
+#include "Settings/KartGameUserSettings.h"
 
 void AKart_PlayerController::BeginPlay()
 {
@@ -18,6 +19,10 @@ void AKart_PlayerController::BeginPlay()
 	if (!IsLocalController())
 	{
 		return;
+	}
+	if (UKartGameUserSettings* Settings = UKartGameUserSettings::Get())
+	{
+		Settings->ApplyAudioSettings(this);
 	}
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{

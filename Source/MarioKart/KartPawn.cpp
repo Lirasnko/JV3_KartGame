@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "KartGameMode.h"
 #include "Items/KartItemComponent.h"
+#include "Settings/KartGameUserSettings.h"
 #include "Sound/SoundWaveProxyPlayer.h"
 
 static constexpr float GroundSnapTolerance = 5.f;
@@ -104,6 +105,14 @@ void AKartPawn::BeginPlay()
 	WheelRearLeftBaseRotation = WheelRearLeft->GetRelativeRotation();
 	WheelRearRightBaseRotation = WheelRearRight->GetRelativeRotation();
 	
+	if (const UKartGameUserSettings* Settings = UKartGameUserSettings::Get())
+	{
+		const float Offset = Settings->GetCameraFOV() - BaseFOV;
+		BaseFOV += Offset;
+		MaxSpeedFOV += Offset;
+		BoostFOV += Offset;
+		Camera->SetFieldOfView(BaseFOV);
+	}
 	if (const AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>())
 	{
 		bCanMove = GameMode->IsRaceStarted();
